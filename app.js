@@ -1,3 +1,5 @@
+process.env.TOKEN_KEY="test"
+
 const express = require("express"); // Using the express framework
 ejs = require("ejs");
 uuid = require("uuid");
