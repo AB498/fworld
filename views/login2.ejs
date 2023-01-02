@@ -1,0 +1,41 @@
+<style>
+	#centerer {
+		margin: auto;
+		width: 100%;
+		background-color: aqua;
+	}
+
+	.container {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+	}
+
+	.form {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+	}
+
+	button {
+		padding: 10% 30%;
+		box-shadow: 5px 5px 5px 0px rgba(0, 0, 0, 0.2);
+	}
+</style>
+<h1>login</h1>
+
+<div id="centerer" class="container">
+	<form action="/api/login" method="POST" class="form">
+		<input type="text" name="Email" placeholder="username">
+		<br>
+		<input type="password" name="Password" placeholder="password">
+		<br>
+		<button>login</button>
+	</form>
+
+	<h1>This is home page</h1>
+
+	<li><a href="/register">Sign up!!</a></li>
+	<li><a href="/login">Login</a></li>
+	<li><a href="/logout">Logout</a></li>
+</div>

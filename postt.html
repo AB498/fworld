@@ -1,0 +1,43 @@
+<html>
+
+<body>
+  <div id="result"></div>
+  <br>
+  <br>
+  <input type="text" id="url" value="http://localhost:3000/api/test">
+  <br>
+  <br>
+  <div id="debug"></div>
+  <script>
+
+    resultDiv = document.querySelector("#result");
+    debugDiv = document.querySelector("#debug");
+    urlInput = document.querySelector("#url");
+
+    var url = urlInput.value;
+
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", url);
+
+    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState === 4) {
+        resultDiv.innerHTML = xhr.responseText;
+        console.log(xhr.status);
+        console.log(xhr.responseText);
+      }
+    };
+
+    jsString = JSON.stringify({
+      "Username": "us",
+      "Email": "us@example.com",
+      "Password": "pass"
+    });
+    debugDiv.innerHTML = jsString;
+    xhr.send(jsString);
+
+  </script>
+</body>
+
+</html>
