@@ -1,5 +1,3 @@
-process.env.TOKEN_KEY="test"
-
 const express = require("express"); // Using the express framework
 ejs = require("ejs");
 uuid = require("uuid");
@@ -147,7 +145,7 @@ app.post("/api/register", async (req, res) => {
           data.Salt,
           Date("now"),
         ];
-        var user = db.run(sql, params, function (err, innerResult) {
+        var user = db.run(sql, params, function(err, innerResult) {
           if (err) {
             res.status(400).json({ error: err.message });
             return;
@@ -198,7 +196,7 @@ app.get("/", (req, res) => {
   const session_token = req.cookies["session_token"];
   if (!session_token) {
     // If the cookie is not set, return an unauthorized status
-    res.send("no session token"); //.redirect("login");
+    res.status(401).send("no session token"); //.redirect("login");
     return;
   }
 
@@ -211,7 +209,7 @@ app.get("/", (req, res) => {
   });
   if (!user) {
     // If the session token is not present in session map, return an unauthorized error
-    res.send("no active session"); //.redirect("login");
+    res.status(401).send("no active session"); //.redirect("login");
     return;
   }
   // if the session has expired, return an unauthorized error, and delete the
@@ -225,6 +223,30 @@ app.get("/", (req, res) => {
   // If all checks have passed, we can consider the user authenticated and
   // send a welcome message
   res.render("home");
+});
+
+app.post("/api/getuser", (req, res) => {
+  console.log(JSON.stringify(req.cookies));
+  console.log(JSON.stringify(req.headers));
+
+  if (!req.headers) {
+    res.status(401).send("no cookies").end();
+    return;
+  }
+  const session_token = req.headers["session_token"];
+  if (!session_token) {
+    res.status(401).send("no session token"); //.redirect("login");
+    return;
+  }
+  dao.findOneUserBySessionToken(session_token, (err, row) => {
+    user = row;
+    console.log(row);
+  });
+  if (!user) {
+    res.status(401).send("no active session"); //.redirect("login");
+    return;
+  }
+  res.send(user);
 });
 app.get("/login", (req, res) => {
   res.render("login");
@@ -283,7 +305,7 @@ app.post("/api/login", async (req, res) => {
     console.log(Email);
 
     var sql = "SELECT * FROM Users WHERE Email = ?";
-    db.all(sql, Email, function (err, rows) {
+    db.all(sql, Email, function(err, rows) {
       if (err) {
         res.status(400).json({ error: err.message });
         return;
