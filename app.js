@@ -93,7 +93,7 @@ app.post("/api/register", async (req, res) => {
               expiresIn: "1h", // 60s = 60 seconds - (60m = 60 minutes, 2h = 2 hours, 2d = 2 days)
             }
           );
-          user.Token = token;
+          user.Token = session_token;
 
           res.cookie("session_token", session_token, {
             expires: expiresAt,
@@ -145,7 +145,7 @@ app.post("/api/register", async (req, res) => {
           data.Salt,
           Date("now"),
         ];
-        var user = db.run(sql, params, function(err, innerResult) {
+        var user = db.run(sql, params, function (err, innerResult) {
           if (err) {
             res.status(400).json({ error: err.message });
             return;
@@ -281,7 +281,7 @@ app.post("/api/login", async (req, res) => {
         expiresIn: "1h", // 60s = 60 seconds - (60m = 60 minutes, 2h = 2 hours, 2d = 2 days)
       }
     );
-    user.Token = token;
+    user.Token = session_token;
 
     res.cookie("session_token", session_token, { expires: expiresAt });
     dao.modifyUserByEmail(Email, "Token", session_token, (err, modifyuser) => {
@@ -305,7 +305,7 @@ app.post("/api/login", async (req, res) => {
     console.log(Email);
 
     var sql = "SELECT * FROM Users WHERE Email = ?";
-    db.all(sql, Email, function(err, rows) {
+    db.all(sql, Email, function (err, rows) {
       if (err) {
         res.status(400).json({ error: err.message });
         return;
