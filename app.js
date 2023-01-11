@@ -9,6 +9,26 @@ var sqlite3 = require("sqlite3").verbose();
 const cors = require("cors");
 var jwt = require("jsonwebtoken");
 var bcrypt = require("bcryptjs");
+const http = require("http");
+const server = http.createServer(app);
+const { Server } = require("socket.io");
+const io = new Server(server);
+
+iterNum = 0;
+io.on("connection", (socket) => {
+  console.log("connected: " + socket.id);
+  socket.on("disconnect", () => {
+    console.log("user disconnected");
+  });
+  socket.on("chat message", (msg) => {
+    iterNum++;
+    console.log("message: " + msg);
+    io.emit("chat message", iterNum + " you said: " + msg);
+  });
+  socket.on("ping", (callback) => {
+    callback();
+  });
+});
 
 bodyParser = require("body-parser");
 
@@ -47,6 +67,10 @@ app.use(
 );
 
 app.use(express.static(__dirname + "/views"));
+
+app.get("/chat", (req, res) => {
+  res.render("chat");
+});
 
 // * R E G I S T E R   N E W   U S E R
 
@@ -110,60 +134,12 @@ app.post("/api/register", async (req, res) => {
                 secure: true,
               });
               return res.send(user).end();
-              // res.redirect("/");
             }
           );
-          // res.redirect("/");
         });
       });
     });
     return;
-    var sql = "SELECT * FROM Users WHERE Email = ?";
-    await db.all(sql, Email, (err, result) => {
-      if (err) {
-        res.status(402).json({ error: err.message });
-        return;
-      }
-
-      if (result.length === 0) {
-        var salt = bcrypt.genSaltSync(10);
-
-        var data = {
-          Username: Username,
-          Email: Email,
-          Password: bcrypt.hashSync(Password, salt),
-          Salt: salt,
-          DateCreated: Date("now"),
-        };
-
-        var sql =
-          "INSERT INTO Users (Username, Email, Password, Salt, DateCreated) VALUES (?,?,?,?,?)";
-        var params = [
-          data.Username,
-          data.Email,
-          data.Password,
-          data.Salt,
-          Date("now"),
-        ];
-        var user = db.run(sql, params, function (err, innerResult) {
-          if (err) {
-            res.status(400).json({ error: err.message });
-            return;
-          }
-        });
-      } else {
-        userExists = true;
-        // res.status(404).send("User Already Exist. Please Login");
-      }
-    });
-
-    setTimeout(() => {
-      if (!userExists) {
-        res.status(201).json("Success");
-      } else {
-        res.status(201).json("Record already exists. Please login");
-      }
-    }, 500);
   } catch (err) {
     console.log(err);
   }
@@ -172,56 +148,25 @@ app.post("/api/register", async (req, res) => {
 // * L O G I N
 
 app.get("/", (req, res) => {
-  // token = req.body.token || req.query.token || req.headers["jwt"];
-
-  // if (!token) {
-  //   return res.status(403).send("A token is required for authentication");
-  // }
-  // try {
-  //   decodedUser = jwt.verify(token, config.TOKEN_KEY);
-  // } catch (err) {
-  //   return res.status(401).send("Invalid Token");
-  // }
-
-  // res.render("home");
-
-  // if this request doesn't have any cookies, that means it isn't
-  // authenticated. Return an error code.
   if (!req.cookies) {
     res.status(401).send("no cookies").end();
     return;
   }
 
-  // We can obtain the session token from the requests cookies, which come with every request
   const session_token = req.cookies["session_token"];
   if (!session_token) {
-    // If the cookie is not set, return an unauthorized status
-    res.status(401).send("no session token"); //.redirect("login");
+    res.status(401).send("no session token");
     return;
   }
 
-  // We then get the session of the user from our session map
-  // that we set in the signinHandler
-  // userSession = sessions[sessionToken];
   user = {};
   dao.findOneUserBySessionToken(session_token, (err, row) => {
     user = row;
   });
   if (!user) {
-    // If the session token is not present in session map, return an unauthorized error
-    res.status(401).send("no active session"); //.redirect("login");
+    res.status(401).send("no active session");
     return;
   }
-  // if the session has expired, return an unauthorized error, and delete the
-  // session from our map
-  // if (userSession.isExpired()) {
-  // delete sessions[sessionToken];
-  // res.send("session expired"); //.redirect("login");
-  // return;
-  // }
-
-  // If all checks have passed, we can consider the user authenticated and
-  // send a welcome message
   res.render("home");
 });
 
@@ -235,7 +180,7 @@ app.post("/api/getuser", (req, res) => {
   }
   const session_token = req.headers["session_token"];
   if (!session_token) {
-    res.status(401).send("no session token"); //.redirect("login");
+    res.status(401).send("no session token");
     return;
   }
   dao.findOneUserBySessionToken(session_token, (err, row) => {
@@ -341,4 +286,4 @@ app.post("/api/test", auth, (req, res) => {
   res.status(200).send("Token Works - Yay!");
 });
 
-app.listen(port, () => console.log(`API listening on port ${port}!`));
+server.listen(port, () => console.log(`API listening on port ${port}!`));
