@@ -15,11 +15,17 @@
         texts
     </div>
     <form action="" id="form">
-        <input type="text" id="input">
+        <textarea type="text" id="input"></textarea>
         <input type="submit">
     </form>
     <script>
-        var socket = io();
+
+        url = "http://localhost:3000";
+        var socket = io(url, {
+            extraHeaders: {
+                "session_token": "guest"
+            }
+        });
 
         var messages = document.getElementById('messagesHolder');
         var form = document.getElementById('form');
@@ -27,15 +33,20 @@
 
         form.addEventListener('submit', function (e) {
             e.preventDefault();
+            session_token = "";
             if (input.value) {
-                socket.emit('chat message', input.value);
+                respObj = { user: { Token: session_token } };
+                respObj["message"] = input.value;
+                socket.emit('messages', respObj);
                 input.value = '';
             }
         });
 
-        socket.on('chat message', function (msg) {
+        socket.on('messages', function (jsn) {
             var item = document.createElement('li');
-            item.textContent = msg;
+            console.log(jsn);
+
+            item.textContent = jsn["user"]["Username"] + ": " + jsn["message"];
             messages.appendChild(item);
             window.scrollTo(0, document.body.scrollHeight);
             // socket.emit('chat message', "you said: " + input.value);

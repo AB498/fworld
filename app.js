@@ -14,16 +14,45 @@ const server = http.createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(server);
 
+websocketConnectedUsers = {};
 iterNum = 0;
 io.on("connection", (socket) => {
   console.log("connected: " + socket.id);
+
+  const session_token = socket.handshake.headers["session_token"];
+  console.log(": " + session_token);
+  if (!session_token) {
+    return;
+  }
+
+  if (session_token != "guest")
+    dao.findOneUserBySessionToken(session_token, (err, row) => {
+      user = row;
+      console.log(row);
+    });
+  else {
+    user = { Username: "Guest" };
+  }
+  if (!user) {
+    return;
+  }
+  tmpUser = user;
+
+  websocketConnectedUsers[socket.id] = tmpUser;
+  respObj = { user: { Username: "- {Server} -" } };
+  respObj["message"] = tmpUser.Username + " joined";
+  console.log(respObj);
+  io.emit("messages", respObj);
+
   socket.on("disconnect", () => {
     console.log("user disconnected");
   });
-  socket.on("chat message", (msg) => {
+  socket.on("messages", (msg) => {
+    respObj["user"] = websocketConnectedUsers[socket.id];
+    respObj["message"] = msg["message"];
     iterNum++;
     console.log("message: " + msg);
-    io.emit("chat message", iterNum + " you said: " + msg);
+    io.emit("messages", respObj);
   });
   socket.on("ping", (callback) => {
     callback();
