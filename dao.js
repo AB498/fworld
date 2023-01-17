@@ -63,14 +63,14 @@ var dao = {
       );
 
       db.run(
-        `CREATE TABLE GlobalMessage (
+        `CREATE TABLE GlobalMessages (
             Id INTEGER PRIMARY KEY AUTOINCREMENT,
             Username text, 
-            Message text           
+            Message text,        
+            Time INTEGER      
             )`,
-        (err) => {
-
-        });
+        (err) => {}
+      );
     }
   }),
   createUsersTable: () => {
@@ -118,6 +118,15 @@ var dao = {
       }
     );
   },
+  addToTable: (values, cb) => {
+    return dao.database.get(
+      `INSERT INTO GlobalMessages (Username, Message, Time ) VALUES( ? , ?, ?);`,
+      values,
+      (err, row) => {
+        cb(err, row);
+      }
+    );
+  },
 
   modifyUserByEmail: (email, column, value, cb) => {
     sqlq = `UPDATE Users
@@ -128,9 +137,9 @@ var dao = {
     });
   },
 
-  quer: (cb) => {
-    return dao.database.get(sqlq, [], (err, row) => {
-      cb(err ? err.message + " " + sqlq : "", row);
+  quer: (sqlq, cb) => {
+    dao.database.all(sqlq, [], (err, rows) => {
+      cb(rows, err);
     });
   },
 

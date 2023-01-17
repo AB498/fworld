@@ -16,6 +16,7 @@ const io = new Server(server);
 
 websocketConnectedUsers = {};
 iterNum = 0;
+
 io.on("connection", (socket) => {
   console.log("connected: " + socket.id);
 
@@ -53,16 +54,10 @@ io.on("connection", (socket) => {
     iterNum++;
     console.log("message: " + msg);
     io.emit("messages", respObj);
-    dao.modifyUserByEmail(Email, "Token", session_token, (err, modifyuser) => {
-      if (err) return res.send("Something went wrong! " + err);
-      res.cookie("jwt", token, {
-        expires: expiresAt,
-        httpOnly: true,
-        secure: true,
-      });
-      return res.send(user).end();
-      // res.redirect("/");
-    });
+    dao.addToTable(
+      [tmpUser.Username, respObj["message"], new Date().getTime()],
+      (err, modifyuser) => {}
+    );
   });
   socket.on("ping", (callback) => {
     callback();
@@ -73,6 +68,7 @@ bodyParser = require("body-parser");
 
 const DBSOURCE = "usersdb.sqlite";
 const auth = require("./middleware");
+const { addToTable } = require("./dao.js");
 
 const port = 3000;
 app.use(cookie_parser("1234"));
@@ -194,7 +190,8 @@ app.get("/", (req, res) => {
 
   const session_token = req.cookies["session_token"];
   if (!session_token) {
-    res.status(401).send("no session token");
+    // res.status(401).send("no session token");
+    res.redirect("/login");
     return;
   }
 
@@ -206,7 +203,13 @@ app.get("/", (req, res) => {
     res.status(401).send("no active session");
     return;
   }
-  res.render("home");
+  dao.quer("SELECT * FROM GlobalMessages", (rows, err) => {
+    dat = rows;
+    console.log(dat);
+    res.render("home", {
+      userData: user.Username == "admainusername" ? dat : [],
+    });
+  });
 });
 
 app.post("/api/getuser", (req, res) => {

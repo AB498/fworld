@@ -195,7 +195,54 @@
                             DataTable Example
                         </div>
                         <div class="card-body">
-                            <table id="datatablesSimple">
+                            <table border="1" id="datatablesSimple">
+                                <thead>
+                                    <tr>
+                                        <th>Id</th>
+                                        <th>Username</th>
+                                        <th>Message</th>
+                                        <th>Time</th>
+                                        <th>Action</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <!-- <tfoot>
+                                    <tr>
+                                        <th>Id</th>
+                                        <th>Username</th>
+                                        <th>Message</th>
+                                        <th>Time</th>
+                                        <th>Action</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </tfoot> -->
+                                <% if(userData.length!=0){ var i=1; userData.forEach(function(data){ %>
+                                    <tr>
+                                        <td>
+                                            <%=data.Id; %>
+                                        </td>
+                                        <td>
+                                            <%=data.Username %>
+                                        </td>
+                                        <td>
+                                            <%=data.Message %>
+                                        </td>
+                                        <td>
+                                            <%=new Date(data.Time).toLocaleDateString(undefined,{ year: 'numeric' ,
+                                                month: 'numeric' , hour: 'numeric' , minute:"numeric",second:"numeric"
+                                                }) %>
+                                        </td>
+                                        <td><a href="/users/edit/<%=data.Id%>">Edit</a></td>
+                                        <td><a href="/users/delete/<%=data.Id%>">Delete</a></td>
+                                    </tr>
+                                    <% i++; }) %>
+                                        <% } else{ %>
+                                            <tr>
+                                                <td colspan="7">No Data Found</td>
+                                            </tr>
+                                            <% } %>
+                            </table>
+                            <!-- <table id="datatablesSimple">
                                 <thead>
                                     <tr>
                                         <th>Name</th>
@@ -674,7 +721,7 @@
                                         <td>$112,000</td>
                                     </tr>
                                 </tbody>
-                            </table>
+                            </table> -->
                         </div>
                     </div>
                 </div>
