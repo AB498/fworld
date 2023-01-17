@@ -61,6 +61,16 @@ var dao = {
           }
         }
       );
+
+      db.run(
+        `CREATE TABLE GlobalMessage (
+            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+            Username text, 
+            Message text           
+            )`,
+        (err) => {
+
+        });
     }
   }),
   createUsersTable: () => {

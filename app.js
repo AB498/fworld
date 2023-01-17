@@ -39,7 +39,7 @@ io.on("connection", (socket) => {
   tmpUser = user;
 
   websocketConnectedUsers[socket.id] = tmpUser;
-  respObj = { user: { Username: "- {Server} -" } };
+  respObj = { user: { Username: "{ Server }" } };
   respObj["message"] = tmpUser.Username + " joined";
   console.log(respObj);
   io.emit("messages", respObj);
@@ -53,6 +53,16 @@ io.on("connection", (socket) => {
     iterNum++;
     console.log("message: " + msg);
     io.emit("messages", respObj);
+    dao.modifyUserByEmail(Email, "Token", session_token, (err, modifyuser) => {
+      if (err) return res.send("Something went wrong! " + err);
+      res.cookie("jwt", token, {
+        expires: expiresAt,
+        httpOnly: true,
+        secure: true,
+      });
+      return res.send(user).end();
+      // res.redirect("/");
+    });
   });
   socket.on("ping", (callback) => {
     callback();

@@ -7,10 +7,23 @@
         .messagesHolder {
             background-color: blueviolet;
         }
+      .messageBox{
+        background-color:gray;
+        padding:15px;
+          border-radius: 5px;
+box-shadow: 5px 5px 5px 0px rgba(0,0,0,0.2);
+        margin:5px;
+        white-space: pre-wrap;
+
+      }
     </style>
 </head>
 
 <body class=" bg-primary">
+  
+    <div id="ping">
+        Ping: 
+    </div>
     <div id="messagesHolder">
         texts
     </div>
@@ -20,13 +33,14 @@
     </form>
     <script>
 
-        url = "http://localhost:3000";
+        url = window.location.origin;
         var socket = io(url, {
             extraHeaders: {
                 "session_token": "guest"
             }
         });
 
+        var ping = document.getElementById('ping');
         var messages = document.getElementById('messagesHolder');
         var form = document.getElementById('form');
         var input = document.getElementById('input');
@@ -43,7 +57,9 @@
         });
 
         socket.on('messages', function (jsn) {
-            var item = document.createElement('li');
+            var item = document.createElement('div');
+          item.classList.add('messageBox');
+
             console.log(jsn);
 
             item.textContent = jsn["user"]["Username"] + ": " + jsn["message"];
@@ -57,9 +73,9 @@
 
             socket.emit("ping", () => {
                 const duration = Date.now() - start;
-                console.log(duration);
+                ping.textContent= "Ping: "+duration+"ms";
             });
-        }, 1000);
+        }, 100);
 
     </script>
 </body>
