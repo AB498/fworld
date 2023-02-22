@@ -14,6 +14,8 @@ const server = http.createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(server);
 
+const { login } = require("./src/auth/auth");
+
 websocketConnectedUsers = {};
 iterNum = 0;
 
@@ -244,81 +246,16 @@ app.get("/register", (req, res) => {
 app.post("/api/login", async (req, res) => {
   console.log(req.body);
   const { Email, Password } = req.body;
-
-  dao.findOneUserByEmail(Email, (err, user) => {
-    console.log(JSON.stringify(user));
-    if (err) return res.status(500).send("Server error!" + err.message);
-    if (!user) return res.status(500).send("User doesnt exist!");
-
-    // const result = bcrypt.compareSync(Password, user.Password);
-    const result = Password == user.Password;
-    if (!result) return res.send("Password not valid!");
-
-    // * CREATE JWT TOKEN
-    const session_token = uuid.v4();
-    const now = new Date();
-    const expiresAt = new Date(+now + 60 * 60 * 24 * 1000);
-    const session = new Session(user.Username, expiresAt);
-    sessions[session_token] = session;
-
-    const token = jwt.sign(
-      { user_id: user.Id, username: user.Username, Email },
-      process.env.TOKEN_KEY,
-      {
-        expiresIn: "1h", // 60s = 60 seconds - (60m = 60 minutes, 2h = 2 hours, 2d = 2 days)
-      }
-    );
-    user.Token = session_token;
-
-    res.cookie("session_token", session_token, { expires: expiresAt });
-    dao.modifyUserByEmail(Email, "Token", session_token, (err, modifyuser) => {
-      if (err) return res.send("Something went wrong! " + err);
-      res.cookie("jwt", token, {
-        expires: expiresAt,
-        httpOnly: true,
-        secure: true,
-      });
-      return res.send(user).end();
-      // res.redirect("/");
+  result = login(Email, Password);
+  if (result.error) res.send(result.error);
+  if (result.user) {
+    res.cookie("session_token", result.session_token, { expires: expiresAt });
+    res.cookie("jwt", result.token, {
+      expires: result.expiresAt,
+      httpOnly: true,
+      secure: true,
     });
-  });
-
-  return;
-  try {
-    // Make sure there is an Email and Password in the request
-    if (!(Email && Password)) {
-      res.status(400).send("All input is required");
-    }
-    console.log(Email);
-
-    var sql = "SELECT * FROM Users WHERE Email = ?";
-    db.all(sql, Email, function (err, rows) {
-      if (err) {
-        res.status(400).json({ error: err.message });
-        return;
-      }
-
-      var PHash = bcrypt.hashSync(Password, user[0].Salt);
-
-      if (PHash === user[0].Password) {
-        // * CREATE JWT TOKEN
-        const token = jwt.sign(
-          { user_id: user[0].Id, username: user[0].Username, Email },
-          process.env.TOKEN_KEY,
-          {
-            expiresIn: "1h", // 60s = 60 seconds - (60m = 60 minutes, 2h = 2 hours, 2d = 2 days)
-          }
-        );
-
-        user[0].Token = token;
-      } else {
-        return res.status(400).send("No Match");
-      }
-
-      return res.status(200).send(user);
-    });
-  } catch (err) {
-    console.log(err);
+    res.send(user);
   }
 });
 
